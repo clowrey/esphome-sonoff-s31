@@ -1,0 +1,106 @@
+
+esphome:
+  name: "${name}"
+  friendly_name: "${friendly_name}"
+  comment: "${device_description}"
+
+esp8266:
+  board: esp01_1m
+
+# Disable logging
+logger:
+  baud_rate: 0 # (UART logging interferes with cse7766)
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${name} Fallback Hotspot"
+    password: "fallback"
+
+captive_portal:
+
+# Device Specific Config
+
+preferences:
+  flash_write_interval: "24h" #save flash write cycles
+
+uart:
+  rx_pin: RX
+  parity: even
+  baud_rate: 4800
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    name: Button
+    internal: True
+    on_press:
+      - switch.toggle: relay
+  - platform: status
+    name: Status
+
+sensor:
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+  - platform: cse7766
+    current:
+      name: Current
+      state_class: measurement
+      device_class: current
+      accuracy_decimals: 2
+      filters:
+        - throttle_average: ${update_interval}
+    voltage:
+      name: Voltage
+      state_class: measurement
+      device_class: voltage
+      accuracy_decimals: 1
+      filters:
+        - throttle_average: ${update_interval}
+    power:
+      name: Power
+      state_class: measurement
+      device_class: power
+      accuracy_decimals: 2
+      id: my_power
+      filters:
+        - throttle_average: ${update_interval}
+  - platform: total_daily_energy
+    name: Daily Energy
+    power_id: my_power
+    method: left
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 2
+
+switch:
+  - platform: gpio
+    name: Relay
+    icon: "mdi:power-socket-us"
+    pin: GPIO12
+    id: relay
+    restore_mode: ${restore_mode} # *************  Choose this wisely!!!! Depends on application
+
+time:
+  - platform: homeassistant
+    id: my_time
+
+status_led:
+  pin: GPIO13
+    
