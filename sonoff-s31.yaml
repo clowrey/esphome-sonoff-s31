@@ -31,7 +31,8 @@ wifi:
 
 captive_portal:
 
-# Device Specific Config
+debug:
+  update_interval: 60s
 
 preferences:
   flash_write_interval: "24h" #save flash write cycles
@@ -58,6 +59,10 @@ sensor:
   - platform: wifi_signal
     name: WiFi Signal
     update_interval: 60s
+
+  - platform: uptime
+    name: Uptime
+    
   - platform: cse7766
     current:
       name: Current
@@ -81,6 +86,7 @@ sensor:
       id: my_power
       filters:
         - throttle_average: ${update_interval}
+        
   - platform: total_daily_energy
     name: Daily Energy
     power_id: my_power
@@ -88,6 +94,15 @@ sensor:
     state_class: total_increasing
     device_class: energy
     accuracy_decimals: 2
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+    
+  - platform: debug # Provide the last reboot reason
+    reset_reason:
+      name: Reset Reason
 
 switch:
   - platform: gpio
